@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Impact Cards - Arc Title Effect</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style type="text/tailwindcss">
+      @layer utilities {
+        .card-perspective {
+          perspective: 2000px;
+        }
+
+        .card,
+        .wrapper,
+        .character,
+        .title-char {
+          transform-style: preserve-3d;
+          backface-visibility: hidden;
+          will-change: transform, opacity;
+        }
+
+        /* --- 背景板厚度与倾斜 --- */
+        .card:hover .wrapper {
+          transform: rotateX(25deg) translateY(1%) translateZ(0);
+          box-shadow:
+            0 1px 0 #222,
+            0 2px 0 #222,
+            0 3px 0 #222,
+            0 4px 0 #222,
+            0 5px 0 #111,
+            0 50px 50px -10px rgba(0, 0, 0, 0.5);
+        }
+
+        .wrapper {
+          @apply border border-white/20 absolute inset-0 rounded-2xl overflow-hidden transition-all duration-700;
+          transform: rotateX(0deg) translateZ(0);
+        }
+
+        /* --- 人物站立效果 --- */
+        .character {
+          transform-origin: bottom center;
+          transform: translate3d(0, -10%, 10px);
+        }
+
+        .card:hover .character {
+          transform: translate3d(0, -20%, 150px) scale(1.1);
+          opacity: 1;
+        }
+
+        /* --- 核心：标题圆弧动效 --- */
+        .title-container {
+          @apply absolute flex justify-center items-center w-full z-30 transition-all duration-700;
+          /* 初始位置：卡片底部 */
+          bottom: 25%;
+          transform: translateZ(20px);
+        }
+
+        .title-char {
+          @apply absolute text-white font-bold text-4xl pointer-events-none transition-all duration-700;
+
+          font-family: 'Times New Roman', Times, serif;
+
+          /* 1. 前景层：文字渐变填充 */
+          -webkit-background-clip: text;
+          background-clip: text;
+          color: white; 
+
+          /* 整体投影 */
+          filter: drop-shadow(0px 4px 4px rgba(0, 20, 40, 0.5));
+
+          /* 默认排列：横向展开 */
+          --offset: calc(var(--i) - (var(--total) - 1) / 2);
+          transform: translateX(calc(var(--offset) * 35px)) translateZ(0);
+          opacity: 0.9;
+          z-index: 20;
+        }
+
+        /* 2. 背景层：伪元素实现描边和外发光 */
+        .title-char::after {
+          content: attr(data-text);
+          @apply absolute left-0 top-0 -z-10;
+          color: transparent;
+
+          text-shadow: 
+            /* 描边 */
+            1px 1px 0 rgba(80, 120, 160, 0.8),
+            -1px -1px 0 rgba(80, 120, 160, 0.8),
+            1px -1px 0 rgba(80, 120, 160, 0.8),
+            -1px 1px 0 rgba(80, 120, 160, 0.8),
+            /* 外发光 */ 0px 0px 10px rgba(100, 150, 200, 0.8);
+        }
+
+        .card:hover .title-container {
+          /* 悬停时整体上浮 */
+          transform: translate3d(0, 0, 220px);
+        }
+
+        .card:hover .title-char {
+          opacity: 1;
+          /* 
+             圆弧数学计算: 
+             1. 计算角度：根据索引在 -60deg 到 60deg 之间分布
+             2. 使用 rotate 和 translateY 模拟圆弧半径
+          */
+          --arc-angle: 50deg;
+          --angle: calc(
+            (var(--i) / (var(--total) - 1) - 0.5) * var(--arc-angle)
+          );
+
+          /* 展开动作：旋转 + 向上推开半径距离 */
+          transform: translateY(100px) rotate(var(--angle)) translateY(-200px)
+            rotate(calc(var(--angle) * -1));
+
+          /* 逐字延迟，模拟 test.html 的 stagger */
+          transition-delay: calc(var(--i) * 0.05s);
+        }
+
+        .background-image {
+          @apply absolute inset-0 w-full h-full object-cover;
+        }
+      }
+    </style>
+  </head>
+
+  <body
+    class="w-screen h-screen flex justify-center items-center bg-gradient-to-t from-slate-800 to-slate-950 overflow-hidden"
+  >
+    <div class="flex justify-center items-center gap-20">
+      <!-- 第一个卡片 -->
+      <div
+        class="card card-perspective w-[250px] h-[500px] relative flex justify-center items-end transition-all duration-700"
+      >
+        <div class="wrapper">
+          <img
+            src="./image/furina_white_background.png"
+            alt="bg"
+            class="background-image"
+          />
+        </div>
+
+        <!-- 标题改为字母组合，--total 是总字数，--i 是索引 -->
+        <div class="title-container" style="--total: 6">
+          <span class="title-char" data-text="F" style="--i: 0">F</span>
+          <span class="title-char" data-text="U" style="--i: 1">U</span>
+          <span class="title-char" data-text="R" style="--i: 2">R</span>
+          <span class="title-char" data-text="I" style="--i: 3">I</span>
+          <span class="title-char" data-text="N" style="--i: 4">N</span>
+          <span class="title-char" data-text="A" style="--i: 5">A</span>
+        </div>
+
+        <img
+          src="./image/furina_white_transparent.png"
+          alt="character"
+          class="character w-[140%] absolute transition-all duration-700 pointer-events-none z-20"
+        />
+      </div>
+
+      <!-- 第二个卡片 (示例) -->
+      <div
+        class="card card-perspective w-[250px] h-[450px] relative flex justify-center items-end transition-all duration-700"
+      >
+        <div class="wrapper">
+          <img src="./image/lauma.jpg" alt="bg" class="background-image" />
+        </div>
+
+        <div class="title-container" style="--total: 5">
+          <span class="title-char" style="--i: 0">L</span>
+          <span class="title-char" style="--i: 1">A</span>
+          <span class="title-char" style="--i: 2">U</span>
+          <span class="title-char" style="--i: 3">M</span>
+          <span class="title-char" style="--i: 4">A</span>
+        </div>
+
+        <img
+          src="./image/04.png"
+          alt="character"
+          class="character w-[110%] absolute transition-all duration-700 pointer-events-none z-20"
+        />
+      </div>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>visual-design-1</title>
+
+    <!-- 样式应该写在这里 -->
+    <style>
+      body {
+        margin: 0;
+      }
+      .content {
+        position: relative; /* 使子元素的绝对定位以此为参考 */
+        /* 您可以在这里给容器添加样式 */
+        width: 100vw; /* 占满整个视口宽度 */
+        height: 100vh; /* 占满整个视口高度 */
+        background: black;
+        overflow: hidden; /* 禁止滚动条 */
+        margin: 0;
+      }
+
+      .character {
+        position: relative;
+        height: 160%;
+        display: block; /* 把图片变成块级元素 */
+        margin: 0 auto; /* 上下间距0，左右自动（即居中） */
+        transform: translateY(-5%);
+        z-index: 10;
+      }
+
+      /* 透明图层，方便布局角色名称文本 */
+      .text-layer {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 1;
+
+        /* 新增：使用 Flex 布局 */
+        display: flex;
+        flex-direction: column; /* 垂直排列，让每个文本占一行 */
+        justify-content: space-between;
+        box-sizing: border-box;
+      }
+
+      .text-layer span {
+        font-family: "Impact", sans-serif;
+        font-style: italic;
+        text-transform: uppercase;
+        color: white;
+        line-height: 0.9; /* 稍微调大一点点防止切边 */
+        /* font-size: 15vw; 如果还觉得挤，可以试着改小到 15vw */
+
+        position: relative;
+        display: block;
+      }
+
+      .rt-text, .lm-text, .rb-text {
+        /* 这三个类分别对应右上、左中、右下的文本 */
+        font-size: 15vw; /* 统一字体大小，您可以根据需要微调 */
+      }
+
+      .rt-text {
+        /* Furina (右上) */
+        text-align: right; /* 靠右对齐 */
+        /* 依然可以通过 margin 微调位置 */
+        margin-right: -10%;
+        margin-top: -2%;
+      }
+
+      .lm-text {
+        /* Fontaine (左中) */
+        text-align: left; /* 靠左对齐 */
+        margin-left: -2%;
+      }
+
+      .rb-text {
+        /* Furina (右下) */
+        text-align: right; /* 靠右对齐 */
+        margin-right: 2%;
+        /* margin-bottom: -10%; */
+      }
+
+      .footer-content {
+        /* 底部内容 */
+        position: relative;
+        background-color: white;
+        padding: 5px;
+        height: 8%;
+      }
+
+      .footer-item {
+        height: 100%;
+        display: flex;
+        align-items: center; /* 垂直居中 */
+        gap: 10px; /* 图片和文字之间的间距 */
+      }
+
+      /* 设置 footer 里的图片样式 */
+      .footer-content img {
+        position: relative;
+        height: 100%; /* 图片高度占满父容器 */
+        width: auto; /* 宽度自动计算，保持图片比例不变 */
+        object-fit: contain; /* 确保图片完整显示，不会被拉伸或裁剪 */
+        display: block; /* 消除图片底部的隐形间隙 */
+      }
+
+      .footer-content span {
+        font-size: 4vw;
+        position: relative;
+        color: black;
+      }
+
+    </style>
+  </head>
+  <body>
+    <div class="content">
+      <img
+        class="character"
+        src="./image/furina_white_transparent.png"
+        alt="Furina"
+      />
+      <div class="text-layer">
+        <div class="rt-text">
+          <span class="char-name">Fontaine</span>
+        </div>
+        <div class="lm-text">
+          <span class="char-name">Furina</span>
+        </div>
+        <div class="rb-text">
+          <span class="char-name">Fontaine</span>
+        </div>
+        <div class="footer-content">
+          <div class="footer-item">
+                <img
+                src="./image/genshin-impact-seeklogo.png"
+                alt="Genshin Impact Logo"
+                />
+            <span>Teyvat</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
