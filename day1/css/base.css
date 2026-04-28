@@ -1,0 +1,396 @@
+html,
+body {
+  width: 100%;
+  min-height: 100%;
+  margin: 0;
+
+  background-color: black;
+}
+
+body {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  box-sizing: border-box;
+}
+
+.main {
+  position: relative;
+  width: 580px;
+  height: 1080px;
+  display: flex;
+  flex-direction: column;
+  border-radius: 40px;
+  overflow: hidden;
+  transition:
+    transform 900ms cubic-bezier(0.22, 0.7, 0.12, 1),
+    opacity 900ms ease;
+}
+
+.header {
+  background-color: var(--header-color);
+  width: 100%;
+  height: var(--header-footer-height);
+
+  border-bottom: 8px solid rgba(0, 0, 0, 0.6);
+}
+
+.content {
+  background-color: var(--section-color);
+  display: flex;
+  position: relative;
+  width: 100%;
+  flex: 1;
+  padding: 24px;
+  box-sizing: border-box;
+  color: #fff;
+  text-align: center;
+  justify-content: center;
+  align-items: center;
+}
+
+.content::after {
+  content: "";
+  position: absolute;
+  inset: 0; /* 配合 absolute 贴满父元素四周 */
+  background: linear-gradient(
+    to top,
+    rgba(0, 0, 0, 0.65),
+    rgba(0, 0, 0, 0.1),
+    rgba(0, 0, 0, 0)
+  );
+}
+
+.frame {
+  position: absolute;
+  overflow: hidden;
+  border: 4px solid #fff;
+  border-radius: 2px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+}
+
+.frame-slot {
+  position: absolute;
+}
+
+.frame-visual {
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.frame1 .frame-visual,
+.frame2 .frame-visual,
+.frame3 .frame-visual {
+  background-color: #fff;
+}
+
+.frame4 {
+  left: 180px;
+  top: 170px;
+  width: 100px;
+  height: 450px;
+}
+
+.frame img {
+  position: absolute;
+  width: 400px;
+  height: auto;
+  transform: translate(100px, 100px);
+  object-fit: cover;
+  /* 人物图单独作为内容层处理，不跟切片框同步入场。 */
+  opacity: 1;
+}
+
+/* 第一个矩形 */
+.frame1 {
+  left: 130px;
+  top: 220px;
+  width: 90px;
+  height: 340px;
+}
+
+.frame1 img {
+  left: -130px;
+  top: -220px;
+}
+
+/* 第二个矩形 */
+.frame3 {
+  left: 235px;
+  top: 120px;
+  width: 120px;
+  height: 600px;
+}
+
+.frame3 img {
+  left: -235px;
+  top: -120px;
+}
+
+/* 第三个矩形 */
+.frame2 {
+  left: 340px;
+  top: 445px;
+  width: 90px;
+  height: 340px;
+}
+
+.frame2 img {
+  left: -340px;
+  top: -445px;
+}
+
+.line-container {
+  position: absolute;
+  left: 380px;
+  top: 130px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  z-index: 3;
+}
+
+.lightning {
+  position: absolute;
+  left: 50%;
+  /* 直接使用提供的雷电 PNG，保留素材原始纵横比。 */
+  width: 60px;
+  height: auto;
+  transform: translateX(-50%);
+  opacity: 0;
+  pointer-events: none;
+  z-index: 1;
+  /* 保留 screen 的电光感，但进一步压低白亮感，让紫色电核更扎实。 */
+  mix-blend-mode: screen;
+  filter: saturate(1.68) brightness(0.94) contrast(1.06)
+    drop-shadow(0 0 5px rgba(102, 26, 222, 0.82))
+    drop-shadow(0 0 12px rgba(58, 10, 146, 0.68));
+  transition:
+    opacity 240ms ease,
+    transform 240ms ease,
+    filter 240ms ease;
+}
+
+.lightning-up {
+  top: -30px;
+  transform-origin: center bottom;
+}
+
+.lightning-down {
+  top: 190px;
+  transform-origin: center top;
+}
+
+.dot {
+  width: 15px;
+  height: 15px;
+  border-radius: 50%; /* 圆形 */
+  background: white;
+  box-shadow:
+    0 0 16px rgba(255, 255, 255, 1),
+    0 0 32px rgba(255, 255, 255, 0.8),
+    0 0 64px rgba(255, 255, 255, 0.6);
+  margin: 0;
+  z-index: 2;
+}
+
+.line {
+  width: 6px;
+  height: 45px;
+  background: white;
+  box-shadow:
+    0 0 6px rgba(255, 255, 255, 0.7),
+    0 0 12px rgba(255, 255, 255, 0.4),
+    0 8px 12px rgba(0, 0, 0, 0.8),
+    0 12px 16px rgba(0, 0, 0, 0.6);
+}
+
+.line-top {
+  /* 上半段线从顶部的 dot 往下生长 */
+  transform-origin: center top;
+  transform: translateY(-5px);
+}
+
+.line-bottom {
+  /* 下半段线从底部的 dot 往上生长 */
+  transform-origin: center bottom;
+  transform: translateY(5px);
+}
+
+.crown {
+  position: absolute;
+  transform: rotate(-45deg);
+  left: 166px;
+  top: 135px;
+  width: 120px;
+  height: auto;
+}
+
+.line-label {
+  position: relative;
+  display: inline-block;
+  margin-top: 40px;
+  margin-bottom: 40px;
+  font-size: 40px;
+  line-height: 1;
+  z-index: 2;
+  isolation: isolate;
+  /* top: 50%;
+  left: 50%; */
+  text-shadow:
+    0 0 6px rgba(255, 255, 255, 0.8),
+    0 0 12px rgba(255, 255, 255, 0.6),
+    0 0 24px rgba(255, 255, 255, 0.4),
+    0 8px 12px rgba(0, 0, 0, 0.8),
+    0 12px 16px rgba(0, 0, 0, 0.6);
+  /* transform: translate(-50%, -50%); */
+}
+
+.line-label::before {
+  content: "";
+  position: absolute;
+  inset: -14px -18px;
+  opacity: 0;
+  pointer-events: none;
+  z-index: -1;
+  border-radius: 999px;
+  background:
+    radial-gradient(
+      circle at center,
+      rgba(196, 126, 255, 0.52) 0%,
+      rgba(156, 78, 255, 0.24) 42%,
+      rgba(96, 28, 196, 0) 76%
+    ),
+    linear-gradient(
+      180deg,
+      rgba(214, 180, 255, 0.26) 0%,
+      rgba(132, 54, 233, 0.38) 48%,
+      rgba(86, 24, 180, 0.08) 100%
+    );
+  mix-blend-mode: screen;
+  filter: blur(10px);
+  transform: scale(0.84);
+}
+
+/* .line-label::after {
+  content: attr(data-text);
+  position: absolute;
+  inset: 0;
+  display: block;
+  white-space: pre-line;
+  line-height: inherit;
+  color: rgba(220, 202, 255, 0.96);
+  opacity: 0;
+  pointer-events: none;
+  z-index: 3;
+  mix-blend-mode: screen;
+  text-shadow:
+    0 0 8px rgba(228, 212, 255, 0.9),
+    0 0 18px rgba(176, 128, 255, 0.78),
+    0 0 34px rgba(112, 54, 220, 0.55);
+  filter: saturate(1.2);
+  transform: scale(0.96);
+} */
+
+.decorate {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  /* 装饰线需要压在 header/footer 之上，退场时 footer 的透明度过渡会形成独立绘制层。 */
+  z-index: 4;
+  filter: drop-shadow(0 8px 12px rgba(0, 0, 0, 0.8))
+    drop-shadow(0 12px 16px rgba(0, 0, 0, 0.6));
+  transition:
+    opacity 700ms ease,
+    filter 700ms ease;
+}
+
+/* 将四角装饰拆成真实元素，便于后续逐根控制动画 */
+.corner {
+  position: absolute;
+}
+
+.corner-top-right {
+  inset: 0 0 auto auto;
+}
+
+.corner-bottom-left {
+  inset: auto auto 0 0;
+}
+
+.decor-line {
+  position: absolute;
+  background: #f5f1ff;
+}
+
+.decor-h {
+  width: 250px;
+  height: 4px;
+}
+
+.decor-v {
+  width: 4px;
+  height: 250px;
+}
+
+/* 右上角两条横线 */
+.corner-top-right .decor-h1 {
+  top: 50px;
+  right: 40px;
+  transform-origin: right center;
+}
+
+.corner-top-right .decor-h2 {
+  top: 65px;
+  right: 15px;
+  transform-origin: right center;
+}
+
+/* 右上角两条竖线 */
+.corner-top-right .decor-v1 {
+  top: 45px;
+  right: 35px;
+  transform-origin: center top;
+}
+
+.corner-top-right .decor-v2 {
+  top: 20px;
+  right: 50px;
+  transform-origin: center top;
+}
+
+/* 左下角两条横线 */
+.corner-bottom-left .decor-h1 {
+  bottom: 50px;
+  left: 40px;
+  transform-origin: left center;
+}
+
+.corner-bottom-left .decor-h2 {
+  bottom: 65px;
+  left: 15px;
+  transform-origin: left center;
+}
+
+/* 左下角两条竖线 */
+.corner-bottom-left .decor-v1 {
+  bottom: 45px;
+  left: 35px;
+  transform-origin: center bottom;
+}
+
+.corner-bottom-left .decor-v2 {
+  bottom: 20px;
+  left: 50px;
+  transform-origin: center bottom;
+}
+
+.footer {
+  width: 100%;
+  height: var(--header-footer-height);
+  background-color: var(--footer-color);
+
+  border-top: 8px solid rgba(0, 0, 0, 0.6);
+}

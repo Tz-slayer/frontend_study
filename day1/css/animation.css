@@ -1,0 +1,784 @@
+/* ============================ Stage 1 背景层渐显 ======================== */
+.main {
+  --main-opacity: 1;
+  --main-scale: 1;
+  --main-y: 0;
+
+  opacity: var(--main-opacity);
+  transform: translateY(var(--main-y)) scale(var(--main-scale));
+}
+
+.header,
+.content,
+.footer {
+  opacity: var(--surface-opacity, 1);
+  transition:
+    opacity 700ms ease,
+    background-color 800ms ease,
+    border-color 800ms ease;
+}
+
+/* 内容区这层渐变遮罩单独控制透明度 */
+.content::after {
+  opacity: var(--content-overlay-opacity, 1);
+  transition: opacity 800ms ease;
+}
+
+/* 阶段类只改变量：preload 是隐藏态，stage-bg 是完成态，stage-outro 再回到隐藏态。 */
+body.is-preload {
+  --header-bg: rgba(103, 94, 159, 0);
+  --content-bg: rgba(57, 45, 91, 0);
+  --footer-bg: rgba(42, 36, 60, 0);
+  --content-overlay-opacity: 0;
+}
+
+.header {
+  background-color: var(--header-bg, var(--header-color));
+}
+
+.content {
+  background-color: var(--content-bg, var(--section-color));
+}
+
+.footer {
+  background-color: var(--footer-bg, var(--footer-color));
+}
+
+/* 背景阶段开始后，再逐步恢复主界面的底板颜色和遮罩。 */
+body.stage-bg {
+  --header-bg: var(--header-color);
+  --content-bg: var(--section-color);
+  --footer-bg: var(--footer-color);
+  --content-overlay-opacity: 1;
+}
+
+/* ============================ Stage 2 主切片入场 ======================== */
+.frame1,
+.frame2,
+.frame3 {
+  /* 主切片先以白色实体块出现，人物内容稍后再覆盖进来。 */
+  --frame-opacity: 0;
+  --frame-y: 18px;
+  --frame-scale: 0.98;
+
+  opacity: var(--frame-opacity);
+  transform: translateY(var(--frame-y)) scale(var(--frame-scale));
+  transition:
+    opacity 700ms ease,
+    transform 700ms ease;
+}
+
+body.stage-frame .frame1,
+body.stage-frame .frame2,
+body.stage-frame .frame3 {
+  --frame-opacity: 1;
+  --frame-y: 0;
+  --frame-scale: 1;
+}
+
+/* 切片框先到位，人物内容要等皇冠落位后才开始填充。
+   三个 frame 里虽然各放了一张 img，但它们实际共享同一张大图的坐标：
+   通过不同偏移只露出不同区域，所以这里可以对三张 img 使用同一套 mask，
+   视觉上就会等价于“先对整张大图做 reveal，再由三个 frame 把它切开”。 */
+.frame1 img,
+.frame2 img,
+.frame3 img {
+  --portrait-filter: blur(8px) brightness(1.35) saturate(1.12);
+  --portrait-mask-position: -135% -150%;
+  --portrait-opacity: 0;
+
+  opacity: var(--portrait-opacity);
+  filter: var(--portrait-filter);
+  transition:
+    opacity 820ms ease,
+    filter 900ms ease,
+    -webkit-mask-position 980ms cubic-bezier(0.2, 0.72, 0.08, 1),
+    mask-position 980ms cubic-bezier(0.2, 0.72, 0.08, 1);
+  /* 用软边斜向遮罩代替硬切 wipe，前沿会更像一道光扫过。 */
+  -webkit-mask-image: linear-gradient(
+    110deg,
+    rgba(0, 0, 0, 0) 0%,
+    rgba(0, 0, 0, 0) 16%,
+    rgba(0, 0, 0, 0.24) 24%,
+    rgba(0, 0, 0, 0.45) 32%,
+    rgba(0, 0, 0, 0.82) 50%,
+    rgba(0, 0, 0, 1) 68%,
+    rgba(0, 0, 0, 1) 100%
+  );
+  mask-image: linear-gradient(
+    110deg,
+    rgba(0, 0, 0, 0) 0%,
+    rgba(0, 0, 0, 0) 16%,
+    rgba(0, 0, 0, 0.24) 24%,
+    rgba(0, 0, 0, 0.45) 32%,
+    rgba(0, 0, 0, 0.82) 50%,
+    rgba(0, 0, 0, 1) 68%,
+    rgba(0, 0, 0, 1) 100%
+  );
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-size: 220% 220%;
+  mask-size: 220% 220%;
+  /* 起点放在图像左上外侧，接近皇冠所在区域，像被触发后往右下扫开。 */
+  -webkit-mask-position: var(--portrait-mask-position);
+  mask-position: var(--portrait-mask-position);
+}
+
+/* 皇冠触发后，人物内容在同一张大图的坐标系里一起显现。
+   这里不要再给不同 frame 单独加延迟，否则会退化成“三张小图各自 reveal”。 */
+body.stage-portrait .frame1 img,
+body.stage-portrait .frame2 img,
+body.stage-portrait .frame3 img {
+  --portrait-filter: blur(0) brightness(1) saturate(1);
+  --portrait-mask-position: 82% 82%;
+  --portrait-opacity: 1;
+}
+
+/* 主切片先进入，其余切片依次跟上，建立视觉层级 */
+body.stage-frame .frame3 {
+  transition-delay: 120ms;
+}
+
+body.stage-frame .frame1 {
+  transition-delay: 240ms;
+}
+
+body.stage-frame .frame2 {
+  transition-delay: 360ms;
+}
+
+/* ============================ Stage 3 辅助切片与四角装饰线入场 ======================== */
+.decor-line {
+  --decor-opacity: 0;
+
+  opacity: var(--decor-opacity);
+  transition:
+    opacity 520ms ease,
+    width 520ms ease,
+    height 520ms ease;
+  /* 装饰线很细，使用 scale 会在小数像素上产生忽粗忽细的抗锯齿抖动。
+     这里改为只动画真实长度：横线改 width，竖线改 height，厚度始终保持不变。 */
+  will-change: opacity, width, height;
+}
+
+.decor-h {
+  --decor-line-width: 0px;
+
+  width: var(--decor-line-width);
+}
+
+.decor-v {
+  --decor-line-height: 0px;
+
+  height: var(--decor-line-height);
+}
+
+/* 装饰阶段开启后，先让主线出现，再补副线。 */
+body.stage-decor .decor-line {
+  --decor-opacity: 1;
+}
+
+body.stage-decor .corner-top-right .decor-h1,
+body.stage-decor .corner-top-right .decor-h2,
+body.stage-decor .corner-bottom-left .decor-h1,
+body.stage-decor .corner-bottom-left .decor-h2 {
+  --decor-line-width: 250px;
+}
+
+body.stage-decor .corner-top-right .decor-v1,
+body.stage-decor .corner-top-right .decor-v2,
+body.stage-decor .corner-bottom-left .decor-v1,
+body.stage-decor .corner-bottom-left .decor-v2 {
+  --decor-line-height: 250px;
+}
+
+body.stage-decor .corner .decor-h1 { transition-delay: 80ms; }
+body.stage-decor .corner .decor-v1 { transition-delay: 180ms; }
+body.stage-decor .corner .decor-h2 { transition-delay: 280ms; }
+body.stage-decor .corner .decor-v2 { transition-delay: 360ms; }
+
+.frame4 {
+  --frame4-opacity: 0;
+  --frame4-scale: 1.06;
+
+  opacity: var(--frame4-opacity);
+  transform: scale(var(--frame4-scale));
+  transition:
+    opacity 700ms ease,
+    transform 700ms ease;
+  transition-delay: 240ms;
+}
+
+/* frame4 现在和四角装饰线处于同一阶段，作为补构图元素比主切片更晚显现。 */
+body.stage-decor .frame4 {
+  --frame4-opacity: 1;
+  --frame4-scale: 1;
+}
+
+/* ============================ Stage 4 皇冠落位 ======================== */
+.crown {
+  --crown-opacity: 0;
+  --crown-y: -12px;
+  --crown-rotate: -38deg;
+
+  opacity: var(--crown-opacity);
+  transform: translateY(var(--crown-y)) rotate(var(--crown-rotate));
+  transition:
+    opacity 700ms ease,
+    transform 700ms ease;
+}
+
+/* 皇冠在前几段建立结构之后再落位，成为记忆点而不是装饰噪音。 */
+body.stage-crown .crown {
+  --crown-opacity: 1;
+  --crown-y: 0;
+  --crown-rotate: -45deg;
+}
+
+/* ============================ Stage 6 名字标记显现 ======================== */
+.dot,
+.line,
+.line-label {
+  transition:
+    opacity 520ms ease,
+    transform 520ms ease,
+    box-shadow 220ms ease,
+    text-shadow 220ms ease,
+    filter 360ms ease;
+}
+
+/* 名字标记作为最后一段仪式性收束：
+   上下两个 dot 同步点亮，上下两条线镜像延伸，最后文字像被雷击点亮。 */
+.dot {
+  --dot-opacity: 0;
+  --dot-scale: 0.6;
+
+  opacity: var(--dot-opacity);
+  transform: scale(var(--dot-scale));
+}
+
+.lightning {
+  --lightning-opacity: 0;
+  --lightning-scale-y: 0.78;
+
+  opacity: var(--lightning-opacity);
+}
+
+.lightning-up,
+.lightning-down {
+  transform: translateX(-50%) scaleY(var(--lightning-scale-y));
+}
+
+.line {
+  --line-opacity: 0;
+  --line-scale-y: 0;
+
+  opacity: var(--line-opacity);
+}
+
+.line-top {
+  transform: translateY(-5px) scaleY(var(--line-scale-y));
+}
+
+.line-bottom {
+  transform: translateY(5px) scaleY(var(--line-scale-y));
+}
+
+.line-label {
+  --label-filter: brightness(1.45);
+  --label-opacity: 0;
+  --label-shadow:
+    0 0 6px rgba(255, 255, 255, 0),
+    0 0 12px rgba(255, 255, 255, 0),
+    0 0 24px rgba(255, 255, 255, 0),
+    0 8px 12px rgba(0, 0, 0, 0),
+    0 12px 16px rgba(0, 0, 0, 0);
+  --label-y: 10px;
+
+  opacity: var(--label-opacity);
+  transform: translateY(var(--label-y));
+  filter: var(--label-filter);
+  text-shadow: var(--label-shadow);
+}
+
+body.stage-name .dot {
+  --dot-opacity: 1;
+  --dot-scale: 1;
+  animation: lightning-node-pulse 320ms ease 60ms both;
+}
+
+body.stage-name .lightning-up,
+body.stage-name .lightning-down {
+  --lightning-opacity: 1;
+  --lightning-scale-y: 1;
+}
+
+/* 上下两段雷电素材分开驱动：
+   上半段向下击入，下半段向上抬起，在文字中心附近汇聚。 */
+body.stage-name .lightning-up {
+  animation: lightning-bolt-strike-up 460ms cubic-bezier(0.15, 0.8, 0.15, 1)
+    1100ms both;
+}
+
+body.stage-name .lightning-down {
+  animation: lightning-bolt-strike-down 460ms cubic-bezier(0.15, 0.8, 0.15, 1)
+    1100ms both;
+}
+
+body.stage-name .line-top {
+  --line-opacity: 1;
+  --line-scale-y: 1;
+  animation: lightning-line-pulse 280ms ease 580ms both;
+}
+
+body.stage-name .line-bottom {
+  --line-opacity: 1;
+  --line-scale-y: 1;
+  animation: lightning-line-pulse 280ms ease 580ms both;
+}
+
+body.stage-name .line-label {
+  --label-filter: brightness(1);
+  --label-opacity: 1;
+  --label-shadow:
+    0 0 6px rgba(255, 255, 255, 0.8),
+    0 0 12px rgba(255, 255, 255, 0.6),
+    0 0 24px rgba(255, 255, 255, 0.4),
+    0 8px 12px rgba(0, 0, 0, 0.8),
+    0 12px 16px rgba(0, 0, 0, 0.6);
+  --label-y: 0;
+  animation: lightning-text-hit 360ms cubic-bezier(0.18, 0.82, 0.18, 1)
+    var(--name-text-delay) both;
+}
+
+body.stage-name .line-label::before {
+  animation: lightning-text-wash 220ms ease calc(var(--name-text-delay) - 20ms)
+    both;
+}
+
+body.stage-name .line-label::after {
+  animation: lightning-text-overlay 240ms ease-out
+    calc(var(--name-text-delay) - 20ms) both;
+}
+
+/* 上下两个端点同步点亮，形成雷电通道的两端。 */
+body.stage-name .line-container .dot:first-child {
+  transition-delay: 60ms;
+}
+
+body.stage-name .line-container .dot:last-child {
+  transition-delay: 60ms;
+}
+
+body.stage-name .lightning-up,
+body.stage-name .lightning-down {
+  transition-delay: 1100ms;
+}
+
+/* 两条线在 dot 完成缩放后同时向中间推进，镜像同步。 */
+body.stage-name .line-top {
+  transition-delay: 580ms;
+}
+
+body.stage-name .line-bottom {
+  transition-delay: 580ms;
+}
+
+/* 文字不再普通淡入，而是在雷线打到中心之后再被点亮。 */
+body.stage-name .line-label {
+  transition-delay: var(--name-text-delay);
+}
+
+@keyframes lightning-node-pulse {
+  0% {
+    box-shadow:
+      0 0 10px rgba(255, 255, 255, 0.7),
+      0 0 20px rgba(255, 255, 255, 0.45),
+      0 0 36px rgba(255, 255, 255, 0.2);
+  }
+  55% {
+    box-shadow:
+      0 0 18px rgba(255, 255, 255, 1),
+      0 0 34px rgba(255, 255, 255, 0.9),
+      0 0 64px rgba(255, 255, 255, 0.6);
+  }
+  100% {
+    box-shadow:
+      0 0 16px rgba(255, 255, 255, 1),
+      0 0 32px rgba(255, 255, 255, 0.8),
+      0 0 64px rgba(255, 255, 255, 0.6);
+  }
+}
+
+@keyframes lightning-bolt-strike-up {
+  0% {
+    opacity: 0;
+    transform: translateX(-50%) scaleY(0.78);
+    filter: saturate(1.34) brightness(0.92) contrast(1.04)
+      drop-shadow(0 0 4px rgba(98, 30, 204, 0.28))
+      drop-shadow(0 0 8px rgba(54, 10, 136, 0.18));
+  }
+  22% {
+    opacity: 1;
+    transform: translateX(-50%) scaleY(1.02);
+    filter: saturate(1.56) brightness(0.98) contrast(1.08)
+      drop-shadow(0 0 8px rgba(132, 44, 255, 0.96))
+      drop-shadow(0 0 18px rgba(74, 16, 188, 0.82));
+  }
+  56% {
+    opacity: 0.42;
+    transform: translateX(-50%) scaleY(0.98);
+    filter: saturate(1.34) brightness(0.94) contrast(1.05)
+      drop-shadow(0 0 6px rgba(124, 44, 232, 0.46))
+      drop-shadow(0 0 14px rgba(68, 16, 170, 0.34));
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(-50%) scaleY(0.98);
+    filter: saturate(1.22) brightness(0.88)
+      drop-shadow(0 0 4px rgba(98, 30, 204, 0.16))
+      drop-shadow(0 0 8px rgba(54, 10, 136, 0.09));
+  }
+}
+
+@keyframes lightning-bolt-strike-down {
+  0% {
+    opacity: 0;
+    transform: translateX(-50%) scaleY(0.78);
+    filter: saturate(1.34) brightness(0.92) contrast(1.04)
+      drop-shadow(0 0 4px rgba(98, 30, 204, 0.28))
+      drop-shadow(0 0 8px rgba(54, 10, 136, 0.18));
+  }
+  22% {
+    opacity: 1;
+    transform: translateX(-50%) scaleY(1.02);
+    filter: saturate(1.56) brightness(0.98) contrast(1.08)
+      drop-shadow(0 0 8px rgba(132, 44, 255, 0.96))
+      drop-shadow(0 0 18px rgba(74, 16, 188, 0.82));
+  }
+  56% {
+    opacity: 0.4;
+    transform: translateX(-50%) scaleY(0.98);
+    filter: saturate(1.34) brightness(0.94) contrast(1.05)
+      drop-shadow(0 0 6px rgba(124, 44, 232, 0.46))
+      drop-shadow(0 0 14px rgba(68, 16, 170, 0.34));
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(-50%) scaleY(0.98);
+    filter: saturate(1.22) brightness(0.88)
+      drop-shadow(0 0 4px rgba(98, 30, 204, 0.16))
+      drop-shadow(0 0 8px rgba(54, 10, 136, 0.09));
+  }
+}
+
+@keyframes lightning-line-pulse {
+  0% {
+    box-shadow:
+      0 0 4px rgba(255, 255, 255, 0.45),
+      0 0 8px rgba(255, 255, 255, 0.2),
+      0 6px 10px rgba(0, 0, 0, 0.45);
+  }
+  50% {
+    box-shadow:
+      0 0 10px rgba(255, 255, 255, 0.95),
+      0 0 18px rgba(255, 255, 255, 0.65),
+      0 8px 14px rgba(0, 0, 0, 0.8),
+      0 0 26px rgba(185, 215, 255, 0.45);
+  }
+  100% {
+    box-shadow:
+      0 0 6px rgba(255, 255, 255, 0.7),
+      0 0 12px rgba(255, 255, 255, 0.4),
+      0 8px 12px rgba(0, 0, 0, 0.8),
+      0 12px 16px rgba(0, 0, 0, 0.6);
+  }
+}
+
+@keyframes lightning-text-hit {
+  0% {
+    opacity: 0;
+    transform: translateY(10px);
+    filter: brightness(1.08);
+    text-shadow:
+      0 0 6px rgba(255, 255, 255, 0),
+      0 0 12px rgba(255, 255, 255, 0),
+      0 0 24px rgba(255, 255, 255, 0),
+      0 8px 12px rgba(0, 0, 0, 0),
+      0 12px 16px rgba(0, 0, 0, 0);
+  }
+  26% {
+    opacity: 0.18;
+    transform: translateY(8px);
+    filter: brightness(1.1);
+    text-shadow:
+      0 0 6px rgba(255, 255, 255, 0.1),
+      0 0 12px rgba(255, 255, 255, 0.08),
+      0 0 24px rgba(255, 255, 255, 0.04),
+      0 8px 12px rgba(0, 0, 0, 0.14),
+      0 12px 16px rgba(0, 0, 0, 0.1);
+  }
+  /* 仍然避免中段炸亮，但把点亮速度收紧，让文字更干脆。 */
+  54% {
+    opacity: 0.9;
+    transform: translateY(2px);
+    filter: brightness(1.28);
+    text-shadow:
+      0 0 10px rgba(255, 255, 255, 0.82),
+      0 0 20px rgba(255, 255, 255, 0.64),
+      0 0 34px rgba(180, 220, 255, 0.42),
+      0 8px 12px rgba(0, 0, 0, 0.7),
+      0 12px 16px rgba(0, 0, 0, 0.54);
+  }
+  74% {
+    opacity: 1;
+    transform: translateY(-1px);
+    filter: brightness(1.14);
+    text-shadow:
+      0 0 9px rgba(255, 255, 255, 0.9),
+      0 0 17px rgba(255, 255, 255, 0.7),
+      0 0 28px rgba(190, 224, 255, 0.46),
+      0 8px 12px rgba(0, 0, 0, 0.78),
+      0 12px 16px rgba(0, 0, 0, 0.6);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+    filter: brightness(1);
+    text-shadow:
+      0 0 6px rgba(255, 255, 255, 0.8),
+      0 0 12px rgba(255, 255, 255, 0.6),
+      0 0 24px rgba(255, 255, 255, 0.4),
+      0 8px 12px rgba(0, 0, 0, 0.8),
+      0 12px 16px rgba(0, 0, 0, 0.6);
+  }
+}
+
+@keyframes lightning-text-wash {
+  0% {
+    opacity: 0;
+    transform: scale(0.84);
+  }
+  35% {
+    opacity: 0.7;
+    transform: scale(1.03);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.09);
+  }
+}
+
+@keyframes lightning-text-overlay {
+  0% {
+    opacity: 0;
+    transform: scale(0.94);
+  }
+  22% {
+    opacity: 0.58;
+    transform: scale(1.015);
+  }
+  58% {
+    opacity: 0.3;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.02);
+  }
+}
+
+/* ============================ Stage 7 画面呼吸感 ======================== */
+body.stage-idle .frame1 .frame-visual {
+  --float-y: 3px;
+  --float-delay: 0ms;
+  animation: frame-idle-float 3600ms ease-in-out infinite;
+  animation-delay: var(--float-delay);
+}
+
+body.stage-idle .frame2 .frame-visual {
+  --float-y: 4px;
+  --float-delay: 180ms;
+  animation: frame-idle-float 3800ms ease-in-out infinite;
+  animation-delay: var(--float-delay);
+}
+
+body.stage-idle .frame3 .frame-visual {
+  --float-y: 2px;
+  --float-delay: 90ms;
+  animation: frame-idle-float 3400ms ease-in-out infinite;
+  animation-delay: var(--float-delay);
+}
+
+body.stage-idle .line-label {
+  animation: label-breathe 3600ms ease-in-out infinite;
+}
+
+@keyframes frame-idle-float {
+  0%,
+  100% {
+    transform: translateY(0) scale(1);
+  }
+
+  50% {
+    transform: translateY(calc(var(--float-y) * -1)) scale(1);
+  }
+}
+
+@keyframes label-breathe {
+  0%,
+  100% {
+    filter: brightness(1);
+    text-shadow:
+      0 0 6px rgba(255, 255, 255, 0.8),
+      0 0 12px rgba(255, 255, 255, 0.6),
+      0 0 24px rgba(255, 255, 255, 0.4),
+      0 8px 12px rgba(0, 0, 0, 0.8),
+      0 12px 16px rgba(0, 0, 0, 0.6);
+  }
+
+  50% {
+    filter: brightness(1.05);
+    text-shadow:
+      0 0 8px rgba(255, 255, 255, 0.95),
+      0 0 18px rgba(255, 255, 255, 0.78),
+      0 0 32px rgba(255, 255, 255, 0.56),
+      0 8px 12px rgba(0, 0, 0, 0.82),
+      0 12px 16px rgba(0, 0, 0, 0.62);
+  }
+}
+
+/* ============================ Stage 8 收束退场 ======================== */
+/* 退场不做逐帧回放，但顺序要和入场呼应：
+   名字先收，人物再被抽离，皇冠回到触发前，最后骨架与底板一起退掉。 */
+body.stage-outro .main {
+  --main-opacity: 0;
+  --main-scale: 0.98;
+  --main-y: 22px;
+  transition-delay: 980ms;
+}
+
+body.stage-outro {
+  --content-bg: rgba(57, 45, 91, 0);
+  --content-overlay-opacity: 0;
+  --footer-bg: rgba(42, 36, 60, 0);
+  --header-bg: rgba(103, 94, 159, 0);
+  --surface-opacity: 0;
+}
+
+body.stage-outro .header,
+body.stage-outro .content,
+body.stage-outro .footer,
+body.stage-outro .content::after {
+  transition-delay: 780ms;
+}
+
+body.stage-outro .decorate {
+  /* 先让子线条完成长度收束，再淡出父层，避免左下角横线被提前吞掉。 */
+  transition-delay: 980ms;
+  opacity: 0;
+}
+
+body.stage-outro .decor-line {
+  /* 退场阶段只把线条长度收回，透明度交给父层最后统一处理。 */
+  --decor-opacity: 1;
+}
+
+body.stage-outro .corner-top-right .decor-h1,
+body.stage-outro .corner-top-right .decor-h2,
+body.stage-outro .corner-bottom-left .decor-h1,
+body.stage-outro .corner-bottom-left .decor-h2 {
+  --decor-line-width: 0px;
+}
+
+body.stage-outro .corner-top-right .decor-v1,
+body.stage-outro .corner-top-right .decor-v2,
+body.stage-outro .corner-bottom-left .decor-v1,
+body.stage-outro .corner-bottom-left .decor-v2 {
+  --decor-line-height: 0px;
+}
+
+body.stage-outro .corner .decor-v2 { transition-delay: 120ms; }
+body.stage-outro .corner .decor-h2 { transition-delay: 200ms; }
+body.stage-outro .corner .decor-v1 { transition-delay: 280ms; }
+body.stage-outro .corner .decor-h1 { transition-delay: 360ms; }
+
+body.stage-outro .frame1,
+body.stage-outro .frame2,
+body.stage-outro .frame3 {
+  --frame-opacity: 0;
+  --frame-y: 18px;
+  --frame-scale: 0.98;
+  transition-delay: 620ms;
+}
+
+body.stage-outro .frame1 .frame-visual,
+body.stage-outro .frame2 .frame-visual,
+body.stage-outro .frame3 .frame-visual {
+  border-color: transparent;
+}
+
+body.stage-outro .frame4 {
+  --frame4-opacity: 0;
+  --frame4-scale: 1.06;
+  transition-delay: 620ms;
+}
+
+body.stage-outro .frame1 img,
+body.stage-outro .frame2 img,
+body.stage-outro .frame3 img {
+  --portrait-mask-position: -135% -150%;
+  --portrait-opacity: 0;
+  transition-delay: 300ms;
+}
+
+body.stage-outro .crown {
+  --crown-opacity: 0;
+  --crown-y: -12px;
+  --crown-rotate: -38deg;
+  transition-delay: 500ms;
+}
+
+body.stage-outro .lightning-up,
+body.stage-outro .lightning-down {
+  animation: none;
+  --lightning-opacity: 0;
+  --lightning-scale-y: 0.78;
+  transition-delay: 0ms;
+}
+
+body.stage-outro .dot,
+body.stage-outro .line {
+  animation: none;
+  transition-delay: 40ms;
+}
+
+body.stage-outro .line-label {
+  animation: none;
+  --label-filter: brightness(1.45);
+  --label-opacity: 0;
+  --label-shadow: none;
+  --label-y: 10px;
+  transition-delay: 0ms;
+}
+
+body.stage-outro .line-label::before,
+body.stage-outro .line-label::after {
+  animation: none;
+  opacity: 0;
+}
+
+body.stage-outro .line-top {
+  --line-opacity: 0;
+  --line-scale-y: 0;
+}
+
+body.stage-outro .line-bottom {
+  --line-opacity: 0;
+  --line-scale-y: 0;
+}
+
+body.stage-outro .dot {
+  --dot-opacity: 0;
+  --dot-scale: 0.6;
+}

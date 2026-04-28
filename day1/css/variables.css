@@ -1,0 +1,10 @@
+:root {
+  --header-color: #675e9f;
+  --section-color: #392d5b;
+  --footer-color: #2a243c;
+  --header-footer-height: 80px;
+
+  /* 修改名字显现时机时，优先改这个值；
+     line-label 本体和两层受击特效会一起跟着移动。 */
+  --name-text-delay: 1050ms;
+}

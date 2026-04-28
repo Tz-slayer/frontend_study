@@ -43,72 +43,108 @@
 
 #### 三个主画面切片依次登场
 
-三块主要的图片切片不应该同时出现，而应该有顺序。
+当前实现里，三块主要切片已经按顺序入场，不是同时出现。
 
-推荐顺序：
+当前顺序：
 
 1. `.frame3` 先出现，作为主纵向骨架
 2. `.frame1` 第二个出现
 3. `.frame2` 最后出现
 
-建议方式：
+当前实现方式：
 
-- 初始透明度略低
-- 初始位置略微向下
-- 可以加一点非常轻的缩放差
-- 最后平稳落到目标位置，不要弹跳过头
+- 切片本体先以白色实体块显现
+- 人物内容不会在 `stage-frame` 里一起出来，而是后续在 `stage-portrait` 阶段统一释放
+- 切片本体使用 `opacity + transform` 入场
 
-建议参数：
+当前参数：
 
-- opacity: `0 -> 1`
-- transform: `translateY(18px) scale(0.98) -> translateY(0) scale(1)`
-- 每块之间错开 `80ms` 到 `140ms`
-- 单块动效时长 `500ms` 到 `700ms`
+- 初始态：`opacity: 0`
+- 初始态：`transform: translateY(18px) scale(1)`
+- 最终态：`opacity: 1`
+- 最终态：`transform: translateY(0) scale(1)`
+- 延迟顺序：
+  `.frame3` `120ms`
+  `.frame1` `240ms`
+  `.frame2` `360ms`
 
 作用：
 
-让画面像被“组装”出来，而不是一次性全部砸到屏幕上。
+先建立切片构图，再把人物内容延后释放，避免角色过早暴露。
 
 #### 皇冠落位
 
-皇冠最适合成为页面里最有记忆点的动效。
+当前实现里，皇冠仍然是人物内容释放前的触发点。
 
-建议方式：
+当前实现方式：
 
-- 初始位置略高于最终位置
-- 初始角度和最终角度有一个很小的偏差
-- 落位时只保留一次轻微回弹感
+- 初始态略高
+- 初始角度略小
+- 进入 `stage-crown` 后回到最终角度
 
-建议参数：
+当前参数：
 
-- translateY: `-12px -> 0`
-- rotate: 围绕最终角度做一个很小的过渡
-- 时长 `600ms` 到 `900ms`
+- 初始态：`opacity: 0`
+- 初始态：`transform: translateY(-12px) rotate(-38deg)`
+- 最终态：`opacity: 1`
+- 最终态：`transform: translateY(0) rotate(-45deg)`
+- 过渡：`700ms ease`
 
 作用：
 
-强调“象征性元素”，但不要做成游戏抽卡页那种夸张特效。
+在构图完成后再引入象征元素，让后续人物 reveal 有明确触发点。
 
 #### 名字标记分段显现
 
-现在这组竖向标记由圆点、竖线和文字组成，非常适合做顺序显现。
+现在这组竖向标记已经有一版可运行的顺序动画，当前实现如下。
 
-建议顺序：
+当前顺序：
 
-1. 上方圆点先亮
-2. 第一段线拉出来
-3. 文字出现
-4. 第二段线和下方圆点补全
+1. 上方 `dot` 先恢复到正常大小
+2. `line-top` 从上方 `dot` 向下延伸
+3. 文字 `span` 出现
+4. 下方 `line-bottom` 从下方 `dot` 向上延伸
+5. 下方 `dot` 最后补上
 
-建议方式：
+当前实现方式：
 
-- 圆点：透明度和发光强度短暂提升
-- 竖线：用 `scaleY` 或高度增长的方式出现
-- 文字：淡入，或从轻微模糊过渡到清晰
+- 两个 `dot` 使用 `opacity + scale` 显现
+- `line-top` 和 `line-bottom` 使用 `scaleY` 显现
+- `line-top` 的 `transform-origin` 是 `center top`
+- `line-bottom` 的 `transform-origin` 是 `center bottom`
+- 文字使用 `opacity + translateY` 显现
+
+当前初始态：
+
+- `.dot`: `opacity: 0; transform: scale(0.6);`
+- `.line-top`: `opacity: 0; transform: translateY(-5px) scaleY(0);`
+- `.line-bottom`: `opacity: 0; transform: translateY(5px) scaleY(0);`
+- `span`: `opacity: 0; transform: translateY(12px);`
+
+当前进入态：
+
+- `.dot`: `opacity: 1; transform: scale(1);`
+- `.line-top`: `opacity: 1; transform: translateY(-5px) scaleY(1);`
+- `.line-bottom`: `opacity: 1; transform: translateY(5px) scaleY(1);`
+- `span`: `opacity: 1; transform: translateY(0);`
+
+当前延迟：
+
+- 上方 `dot`: `60ms`
+- `line-top`: `140ms`
+- `span`: `260ms`
+- `line-bottom`: `380ms`
+- 下方 `dot`: `480ms`
+
+当前问题记录：
+
+- 线段虽然已经按上下两端的 `transform-origin` 去延伸，但名字标记整体节奏仍然偏机械
+- 上下两端 `dot` 与两条线的因果关系还不够强
+- 下方 `dot` 当前是最后补上，这和“线从 dot 中长出来”的感受并不完全一致
 
 作用：
 
-把用户视线自然引到角色名字上。
+把用户视线从主画面收束到角色名字，但这部分仍然保留继续优化空间。
 
 ## 阶段控制方式
 
@@ -152,9 +188,9 @@
 
 - `stage-bg`
 - `stage-frame`
-- `stage-aux`
 - `stage-decor`
 - `stage-crown`
+- `stage-portrait`
 - `stage-name`
 - `stage-idle`
 
@@ -193,12 +229,12 @@
    控制 `header`、`content`、`footer` 和 `.content::after` 的渐显
 2. `stage-frame`
    控制 `.frame1`、`.frame2`、`.frame3` 的主切片入场
-3. `stage-aux`
-   控制 `.frame4` 的辅助切片入场
-4. `stage-decor`
-   控制 `.decorate` 下各根装饰线的进入
-5. `stage-crown`
+3. `stage-decor`
+   控制 `.frame4` 和 `.decorate` 下各根装饰线的进入
+4. `stage-crown`
    控制 `.crown` 的落位
+5. `stage-portrait`
+   控制三块主切片中的人物内容显现
 6. `stage-name`
    控制 `.line-container` 内圆点、竖线和文字的显现
 7. `stage-idle`
@@ -208,18 +244,19 @@
 
 1. `stage-bg`: `0ms`
 2. `stage-frame`: `650ms`
-3. `stage-aux`: `1100ms`
-4. `stage-decor`: `1400ms`
-5. `stage-crown`: `1700ms`
-6. `stage-name`: `2100ms`
-7. `stage-idle`: `2600ms`
+3. `stage-decor`: `1100ms`
+4. `stage-crown`: `1700ms`
+5. `stage-portrait`: `2050ms`
+6. `stage-name`: `2780ms`
+7. `stage-idle`: `3280ms`
 
 ### 这条时间轴的含义
 
 - 背景先建立空间氛围
-- 主切片在背景快结束时提前进入
-- 辅助切片和装饰线继续补全构图
+- 主切片先以白色切片板进入
+- `frame4` 和四角装饰线补全构图
 - 皇冠在画面结构稳定后落位
+- 人物内容在 `stage-portrait` 里被释放出来
 - 名字标记最后作为视觉收束
 - 全部完成后才进入静止态呼吸
 

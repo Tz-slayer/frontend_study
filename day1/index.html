@@ -4,29 +4,39 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>day1</title>
-    <link rel="stylesheet" href="style.css" />
+    <link rel="stylesheet" href="css/variables.css" />
+    <link rel="stylesheet" href="css/base.css" />
+    <link rel="stylesheet" href="css/animation.css" />
   </head>
   <body class="is-preload">
     <div class="main">
       <div class="header"></div>
       <div class="content">
         <div class="frame frame4"></div>
-        <div class="frame frame1">
-          <img src="day1.jpg" alt="" />
+        <div class="frame-slot frame1">
+          <div class="frame frame-visual">
+            <img src="./assets/day1.jpg" alt="" />
+          </div>
         </div>
 
-        <div class="frame frame2">
-          <img src="day1.jpg" alt="" />
+        <div class="frame-slot frame2">
+          <div class="frame frame-visual">
+            <img src="./assets/day1.jpg" alt="" />
+          </div>
         </div>
 
-        <div class="frame frame3">
-          <img src="day1.jpg" alt="" />
+        <div class="frame-slot frame3">
+          <div class="frame frame-visual">
+            <img src="./assets/day1.jpg" alt="" />
+          </div>
         </div>
 
         <div class="line-container">
+          <img class="lightning lightning-up" src="./assets/thunder_effect_up.png" alt="" />
+          <img class="lightning lightning-down" src="./assets/thunder_effect_down.png" alt="" />
           <div class="dot"></div>
           <div class="line line-top"></div>
-          <span>雷<br />电</span>
+          <span class="line-label" data-text="雷&#10;电">雷<br />电</span>
           <div class="line line-bottom"></div>
           <div class="dot"></div>
         </div>
@@ -47,7 +57,7 @@
         </div>
       </div>
 
-      <img class="crown" src="./crown_cutout.png" alt="" />
+      <img class="crown" src="./assets/crown_cutout.png" alt="" />
 
       <div class="footer"></div>
     </div>
@@ -59,21 +69,56 @@
         { name: "stage-frame", at: 650 },
         { name: "stage-decor", at: 1100 },
         { name: "stage-crown", at: 1700 },
-        // 人物内容不跟切片框一起出现，而是等皇冠落位后再被释放出来。
         { name: "stage-portrait", at: 2050 },
-        { name: "stage-name", at: 2550 },
-        { name: "stage-idle", at: 3050 }
+        { name: "stage-name", at: 2780 },
+        { name: "stage-idle", at: 4500 },
+        { name: "stage-outro", at: 14000 }
       ];
 
-      window.addEventListener("load", () => {
-        requestAnimationFrame(() => {
-          timeline.forEach(({ name, at }) => {
-            window.setTimeout(() => {
-              document.body.classList.add(name);
-            }, at);
-          });
+      const introStageNames = timeline.map(({ name }) => name);
+      const introTimers = [];
+
+      function clearIntroTimers() {
+        while (introTimers.length) {
+          window.clearTimeout(introTimers.pop());
+        }
+      }
+
+      function queueIntroTimeline(offset = 0) {
+        timeline.forEach(({ name, at }) => {
+          const timer = window.setTimeout(() => {
+            document.body.classList.add(name);
+          }, Math.max(0, at - offset));
+
+          introTimers.push(timer);
         });
+      }
+
+      function relayIntro({ offset = 0 } = {}) {
+        clearIntroTimers();
+        document.body.classList.remove(...introStageNames);
+        document.body.classList.add("is-preload");
+
+        // 强制浏览器先吃到 preload 初始态，再重新触发整段首屏动画。
+        void document.body.offsetWidth;
+
+        requestAnimationFrame(() => {
+          queueIntroTimeline(offset);
+        });
+      }
+
+      window.addEventListener("load", () => {
+        relayIntro();
       });
+
+      // DevTools 调试入口：在控制台里执行 relayIntro() 即可重播。
+      window.relayIntro = relayIntro;
+      // 兼容之前临时起的名字，避免旧的控制台调用失效。
+      window.replayIntro = relayIntro;
+      window.relayOutro = function relayOutro() {
+        clearIntroTimers();
+        document.body.classList.add("stage-outro");
+      };
     </script>
   </body>
 </html>
