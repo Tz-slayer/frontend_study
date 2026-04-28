@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>芙宁娜风格文字效果</title>
+    <style>
+        body {
+            /* 模拟图片背景：淡蓝色渐变 */
+            background: linear-gradient(180deg, #a8d8ea 0%, #ffffff 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .furina-text {
+            /* 1. 字体基础设置 */
+            font-family: "Source Han Serif CN", "Songti SC", "SimSun", serif;
+            font-size: 120px;
+            font-weight: 900;
+            letter-spacing: 4px;
+            position: relative;
+            
+            /* 2. 实现文字内部渐变 (从纯白到淡蓝) */
+            background: linear-gradient(to bottom, #ffffff 40%, #b8d2e8 95%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+
+            /* 3. 实现多层描边与投影 (关键步骤) 
+               第一层：极细的深色描边，增加清晰度
+               第二层：半透明的蓝色外发光，模拟图片中的环境感
+            */
+            filter: drop-shadow(0px 2px 1px rgba(0, 40, 80, 0.3));
+        }
+
+        /* 使用 text-shadow 补充细微轮廓线 */
+        .furina-text::after {
+            content: "芙宁娜";
+            position: absolute;
+            left: 0;
+            top: 0;
+            z-index: -1;
+            /* 细描边：通过四个方向的微小位移实现 */
+            text-shadow: 
+                1px 1px 0px rgba(80, 120, 160, 0.4),
+                -1px -1px 0px rgba(80, 120, 160, 0.4),
+                1px -1px 0px rgba(80, 120, 160, 0.4),
+                -1px 1px 0px rgba(80, 120, 160, 0.4),
+                0px 0px 8px rgba(100, 150, 200, 0.5); /* 外发光 */
+        }
+    </style>
+</head>
+<body>
+
+    <div class="furina-text">芙宁娜</div>
+
+</body>
+</html>
